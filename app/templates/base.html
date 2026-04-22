@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <header class="bg-gray-900 p-4 shadow-md">
+        <nav class="flex justify-between items-center container mx-auto">
+            <div class="text-lg font-semibold text-white">
+                <a href="#">Мой сайт</a>
+            </div>
+            <div>
+                <button id="openModalButton" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Войти
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-8">
+        <h1 class="text-4xl font-bold text-center text-gray-900 mb-8">Добро пожаловать на мой сайт!</h1>
+        <p class="text-lg text-center text-gray-600">
+            Нажмите "Войти", чтобы пройти авторизацию по номеру телефона.
+        </p>
+    </main>
+
+    <footer class="bg-gray-900 text-white py-4 mt-10 fixed bottom-0 left-0 w-full">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2026 Мой сайт. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <div id="modal" class="fixed top-0 left-0 z-50 w-full h-full bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 text-gray-800 shadow-lg">
+            <h2 id="modalTitle" class="text-center text-lg font-medium text-gray-800 mb-5">Авторизация</h2>
+
+            <form id="loginForm">
+                <label for="phone" class="text-xs text-gray-600">Номер телефона</label>
+                <input id="phone" type="text" placeholder="Введите номер телефона" class="w-full p-2 mb-4 border border-gray-300 rounded">
+                <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded">Отправить SMS</button>
+            </form>
+
+            <form id="codeForm" class="hidden">
+                <label for="code" class="text-xs text-gray-600">Код из SMS</label>
+                <input id="code" type="text" placeholder="Введите код" class="w-full p-2 mb-4 border border-gray-300 rounded">
+                <button type="submit" class="w-full py-2 bg-green-600 text-white rounded">Подтвердить код</button>
+            </form>
+
+            <button id="closeModalButton" class="absolute top-2 right-2">X</button>
+        </div>
+    </div>
+
+    <script>
+        const openModalButton = document.getElementById('openModalButton');
+        const closeModalButton = document.getElementById('closeModalButton');
+        const modal = document.getElementById('modal');
+        const loginForm = document.getElementById('loginForm');
+        const codeForm = document.getElementById('codeForm');
+
+        openModalButton.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('phone').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message);
+                loginForm.classList.add('hidden');
+                codeForm.classList.remove('hidden');
+            } else {
+                alert('Ошибка при отправке SMS!');
+            }
+        });
+
+        codeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = document.getElementById('code').value;
+            const phone = document.getElementById('phone').value;
+
+            const response = await fetch('/verify-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code, phone })
+            });
+
+            if (response.ok) {
+                alert('Код подтвержден!');
+                modal.classList.add('hidden');
+            } else {
+                alert('Неверный код!');
+            }
+        });
+    </script>
+
+</body>
+</html>
