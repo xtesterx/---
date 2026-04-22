@@ -1,117 +1,914 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Авторизация</title>
+    <title>{% block title %}Мой сайт{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-800">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
-    <header class="bg-gray-900 p-4 shadow-md">
-        <nav class="flex justify-between items-center container mx-auto">
-            <div class="text-lg font-semibold text-white">
-                <a href="#">Мой сайт</a>
-            </div>
-            <div>
-                <button id="openModalButton" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Войти
-                </button>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#F7F3EE',
+                        sand: '#EFE7DC',
+                        warm: {
+                            50: '#FFFCF8',
+                            100: '#F7F3EE',
+                            200: '#EFE7DC',
+                            300: '#DDD4C8',
+                            400: '#C4B8A9',
+                            500: '#A69888',
+                            600: '#7A7168',
+                            700: '#6B625A',
+                            800: '#4A443E',
+                            900: '#1D1D1B',
+                        },
+                        accent: {
+                            DEFAULT: '#C97B63',
+                            hover: '#B56A53',
+                            light: '#E8A990',
+                            dark: '#8B5E3C',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        '2xl': '16px',
+                        '3xl': '24px',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+
+        /* Модалка анимация */
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .modal-backdrop.hidden { opacity: 0; pointer-events: none; }
+        .modal-backdrop:not(.hidden) { opacity: 1; }
+        .modal-card { transition: transform 0.3s ease, opacity 0.3s ease; }
+        .modal-backdrop.hidden .modal-card { transform: scale(0.95) translateY(10px); opacity: 0; }
+        .modal-backdrop:not(.hidden) .modal-card { transform: scale(1) translateY(0); opacity: 1; }
+
+        /* Фокус полей */
+        .input-field:focus {
+            border-color: #C97B63 !important;
+            box-shadow: 0 0 0 3px rgba(201, 123, 99, 0.12) !important;
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #C4B8A9; border-radius: 3px; }
+
+        /* Анимация сообщений */
+        .message-slide { animation: slideDown 0.3s ease; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Кнопки */
+        .btn-primary { transition: all 0.2s ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29, 29, 27, 0.15); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-accent { transition: all 0.2s ease; }
+        .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201, 123, 99, 0.25); }
+        .btn-accent:active { transform: translateY(0); }
+
+        /* Фон */
+        .bg-pattern {
+            background-color: #F7F3EE;
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(201,123,99,0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(201,123,99,0.04) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(168,130,100,0.03) 0%, transparent 50%);
+        }
+
+        /* Глазик переключения пароля */
+        .password-wrapper { position: relative; }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #A69888;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, background 0.2s;
+        }
+        .password-toggle:hover {
+            color: #6B625A;
+            background: rgba(201, 123, 99, 0.08);
+        }
+
+        /* Телефонный ввод с флагом */
+        .phone-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .phone-prefix {
+            position: absolute;
+            left: 1px;
+            top: 1px;
+            bottom: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 12px;
+            background: #F7F3EE;
+            border-right: 1px solid #DDD4C8;
+            border-radius: 11px 0 0 11px;
+            color: #4A443E;
+            font-size: 14px;
+            font-weight: 500;
+            user-select: none;
+            pointer-events: none;
+        }
+        .phone-prefix .flag {
+            font-size: 18px;
+            line-height: 1;
+        }
+        .phone-input-wrapper input {
+            padding-left: 90px !important;
+            letter-spacing: 0.5px;
+        }
+
+        /* Сила пароля */
+        .strength-bar {
+            height: 3px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            background: #EFE7DC;
+        }
+        .strength-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        /* Чекбокс кастомный */
+        .custom-checkbox {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #C4B8A9;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .custom-checkbox:checked {
+            background: #C97B63;
+            border-color: #C97B63;
+        }
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 4.5px;
+            top: 1.5px;
+            width: 5px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 1.5px 1.5px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox:focus {
+            box-shadow: 0 0 0 3px rgba(201, 123, 99, 0.15);
+            outline: none;
+        }
+
+        /* Разделитель "или" */
+        .divider-or {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #A69888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .divider-or::before, .divider-or::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #DDD4C8;
+        }
+    </style>
+</head>
+
+<body class="bg-pattern text-warm-900 min-h-screen flex flex-col">
+
+    <!-- ========== HEADER ========== -->
+    <header class="bg-warm-900 backdrop-blur-md border-b border-warm-800">
+        <nav class="flex justify-between items-center container mx-auto px-6 py-4">
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+                    <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+                </div>
+                <span class="text-lg font-semibold text-warm-200 group-hover:text-white transition-colors">
+                    Мой сайт
+                </span>
+            </a>
+
+            <div class="flex items-center gap-4">
+                {% if user_name %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-white text-sm font-medium">
+                            {{ user_name[0] | upper }}
+                        </div>
+                        <span class="text-warm-300 text-sm font-medium hidden sm:block">{{ user_name }}</span>
+                    </div>
+                    <button id="logoutButton"
+                        class="flex items-center gap-2 px-4 py-2 text-sm text-warm-400 hover:text-warm-200 border border-warm-700 hover:border-warm-500 rounded-xl transition-all">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                        Выйти
+                    </button>
+                {% else %}
+                    <button id="openModalButton"
+                        class="flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent-hover btn-accent">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                        Войти
+                    </button>
+                {% endif %}
             </div>
         </nav>
     </header>
 
-    <main class="container mx-auto p-8">
-        <h1 class="text-4xl font-bold text-center text-gray-900 mb-8">Добро пожаловать на мой сайт!</h1>
-        <p class="text-lg text-center text-gray-600">
-            Нажмите "Войти", чтобы пройти авторизацию по номеру телефона.
-        </p>
+    <!-- ========== MAIN ========== -->
+    <main class="flex-1 container mx-auto px-6 py-12">
+        {% block content %}
+
+        <div class="max-w-2xl mx-auto text-center mt-16">
+            <h1 class="text-4xl sm:text-5xl font-bold text-warm-900 tracking-tight leading-tight mb-6">
+                Добро пожаловать
+            </h1>
+            <p class="text-lg text-warm-600 leading-relaxed mb-10">
+                Минималистичный и тёплый интерфейс, вдохновлённый лучшими практиками современного дизайна.
+            </p>
+            {% if not user_name %}
+            <button onclick="document.getElementById('openModalButton').click()"
+                class="inline-flex items-center gap-2 px-8 py-4 bg-warm-900 text-warm-100 rounded-2xl font-medium btn-primary">
+                Начать работу
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto mt-16">
+            <div class="bg-warm-50 border border-warm-300 rounded-3xl p-6 hover:shadow-md transition-shadow">
+                <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-accent"></i>
+                </div>
+                <h3 class="font-semibold text-warm-900 mb-2">Безопасность</h3>
+                <p class="text-sm text-warm-600 leading-relaxed">Надёжная авторизация с шифрованием данных</p>
+            </div>
+            <div class="bg-warm-50 border border-warm-300 rounded-3xl p-6 hover:shadow-md transition-shadow">
+                <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="zap" class="w-5 h-5 text-accent"></i>
+                </div>
+                <h3 class="font-semibold text-warm-900 mb-2">Скорость</h3>
+                <p class="text-sm text-warm-600 leading-relaxed">Быстрый и отзывчивый интерфейс</p>
+            </div>
+            <div class="bg-warm-50 border border-warm-300 rounded-3xl p-6 hover:shadow-md transition-shadow">
+                <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="heart" class="w-5 h-5 text-accent"></i>
+                </div>
+                <h3 class="font-semibold text-warm-900 mb-2">Удобство</h3>
+                <p class="text-sm text-warm-600 leading-relaxed">Продуманный пользовательский опыт</p>
+            </div>
+        </div>
+
+        {% endblock %}
     </main>
 
-    <footer class="bg-gray-900 text-white py-4 mt-10 fixed bottom-0 left-0 w-full">
-        <div class="container mx-auto text-center">
-            <p>&copy; 2026 Мой сайт. Все права защищены.</p>
+    <!-- ========== FOOTER ========== -->
+    <footer class="border-t border-warm-300 bg-warm-50">
+        <div class="container mx-auto px-6 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-warm-500">&copy; 2025 Мой сайт. Все права защищены.</p>
+            <div class="flex gap-6">
+                <a href="#" class="text-sm text-warm-500 hover:text-warm-800 transition-colors">Политика</a>
+                <a href="#" class="text-sm text-warm-500 hover:text-warm-800 transition-colors">Условия</a>
+                <a href="#" class="text-sm text-warm-500 hover:text-warm-800 transition-colors">Контакты</a>
+            </div>
         </div>
     </footer>
 
-    <div id="modal" class="fixed top-0 left-0 z-50 w-full h-full bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white w-full max-w-md rounded-xl p-6 text-gray-800 shadow-lg">
-            <h2 id="modalTitle" class="text-center text-lg font-medium text-gray-800 mb-5">Авторизация</h2>
+    <!-- ========== МОДАЛЬНОЕ ОКНО ========== -->
+    <div id="modal" class="fixed inset-0 z-50 bg-warm-900/40 backdrop-blur-sm flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="modal-card bg-warm-50 w-full max-w-md rounded-3xl p-8 shadow-2xl shadow-warm-900/10 relative border border-warm-300 max-h-[90vh] overflow-y-auto">
 
+            <!-- Закрыть -->
+            <button id="closeModal"
+                class="absolute top-4 right-5 w-8 h-8 flex items-center justify-center rounded-full text-warm-500 hover:text-warm-800 hover:bg-warm-200 transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Иконка -->
+            <div class="flex justify-center mb-5">
+                <div class="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
+                    <i data-lucide="user-round" class="w-6 h-6 text-accent"></i>
+                </div>
+            </div>
+
+            <!-- Табы -->
+            <div class="flex mb-7 bg-warm-200/60 rounded-xl p-1">
+                <button id="tabLogin"
+                    class="flex-1 py-2.5 text-center text-sm font-medium rounded-lg transition-all bg-white text-warm-900 shadow-sm flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                    Войти
+                </button>
+                <button id="tabRegister"
+                    class="flex-1 py-2.5 text-center text-sm font-medium rounded-lg transition-all text-warm-500 hover:text-warm-700 flex items-center justify-center gap-2">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    Регистрация
+                </button>
+            </div>
+
+            <!-- ===== ФОРМА ВХОДА ===== -->
             <form id="loginForm">
-                <label for="phone" class="text-xs text-gray-600">Номер телефона</label>
-                <input id="phone" type="text" placeholder="Введите номер телефона" class="w-full p-2 mb-4 border border-gray-300 rounded">
-                <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded">Отправить SMS</button>
+                <!-- Телефон -->
+                <div class="mb-5">
+                    <label for="loginPhone" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="phone" class="w-3 h-3"></i>
+                        Номер телефона
+                    </label>
+                    <div class="phone-input-wrapper">
+                        <div class="phone-prefix">
+                            <span class="flag">🇷🇺</span>
+                            <span>+7</span>
+                        </div>
+                        <input id="loginPhone" type="tel" placeholder="(999) 123-45-67" maxlength="15"
+                            class="input-field w-full px-4 py-3 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Пароль -->
+                <div class="mb-5">
+                    <label for="loginPassword" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="lock" class="w-3 h-3"></i>
+                        Пароль
+                    </label>
+                    <div class="password-wrapper">
+                        <input id="loginPassword" type="password" placeholder="Введите пароль"
+                            class="input-field w-full px-4 py-3 pr-11 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                        <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Показать пароль">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Запомнить -->
+                <div class="flex items-center justify-between mb-6">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="custom-checkbox" checked>
+                        <span class="text-sm text-warm-600">Запомнить меня</span>
+                    </label>
+                    <a href="#" class="text-sm text-accent hover:text-accent-hover transition-colors">Забыли пароль?</a>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3.5 bg-warm-900 text-warm-100 rounded-xl font-medium btn-primary flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    Войти
+                </button>
+
+                <div class="divider-or my-5">или</div>
+
+                <p class="text-center text-sm text-warm-500">
+                    Нет аккаунта?
+                    <a href="#" id="switchToRegister" class="text-accent font-medium hover:text-accent-hover transition-colors">
+                        Создать бесплатно
+                    </a>
+                </p>
             </form>
 
-            <form id="codeForm" class="hidden">
-                <label for="code" class="text-xs text-gray-600">Код из SMS</label>
-                <input id="code" type="text" placeholder="Введите код" class="w-full p-2 mb-4 border border-gray-300 rounded">
-                <button type="submit" class="w-full py-2 bg-green-600 text-white rounded">Подтвердить код</button>
+            <!-- ===== ФОРМА РЕГИСТРАЦИИ ===== -->
+            <form id="registerForm" class="hidden">
+                <!-- Имя -->
+                <div class="mb-4">
+                    <label for="regName" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="user" class="w-3 h-3"></i>
+                        Имя
+                    </label>
+                    <input id="regName" type="text" placeholder="Как вас зовут?"
+                        class="input-field w-full px-4 py-3 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                </div>
+
+                <!-- Телефон -->
+                <div class="mb-4">
+                    <label for="regPhone" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="phone" class="w-3 h-3"></i>
+                        Номер телефона
+                    </label>
+                    <div class="phone-input-wrapper">
+                        <div class="phone-prefix">
+                            <span class="flag">🇷🇺</span>
+                            <span>+7</span>
+                        </div>
+                        <input id="regPhone" type="tel" placeholder="(999) 123-45-67" maxlength="15"
+                            class="input-field w-full px-4 py-3 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="regEmail" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="mail" class="w-3 h-3"></i>
+                        Email
+                    </label>
+                    <input id="regEmail" type="email" placeholder="hello@example.com"
+                        class="input-field w-full px-4 py-3 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                </div>
+
+                <!-- Пароль -->
+                <div class="mb-2">
+                    <label for="regPassword" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="lock" class="w-3 h-3"></i>
+                        Пароль
+                    </label>
+                    <div class="password-wrapper">
+                        <input id="regPassword" type="password" placeholder="Минимум 6 символов"
+                            class="input-field w-full px-4 py-3 pr-11 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                        <button type="button" class="password-toggle" data-target="regPassword" aria-label="Показать пароль">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Индикатор силы пароля -->
+                <div class="mb-4">
+                    <div class="strength-bar">
+                        <div id="strengthFill" class="strength-fill" style="width: 0%; background: #DDD4C8;"></div>
+                    </div>
+                    <p id="strengthText" class="text-xs text-warm-400 mt-1.5 flex items-center gap-1">
+                        <i data-lucide="info" class="w-3 h-3"></i>
+                        <span>Введите пароль</span>
+                    </p>
+                </div>
+
+                <!-- Подтверждение пароля -->
+                <div class="mb-4">
+                    <label for="regPasswordConfirm" class="flex items-center gap-1.5 text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider">
+                        <i data-lucide="lock-keyhole" class="w-3 h-3"></i>
+                        Подтвердите пароль
+                    </label>
+                    <div class="password-wrapper">
+                        <input id="regPasswordConfirm" type="password" placeholder="Повторите пароль"
+                            class="input-field w-full px-4 py-3 pr-11 bg-white border border-warm-300 rounded-xl text-warm-900 placeholder-warm-400 focus:outline-none transition-all">
+                        <button type="button" class="password-toggle" data-target="regPasswordConfirm" aria-label="Показать пароль">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <!-- Статус совпадения -->
+                    <p id="matchStatus" class="text-xs mt-1.5 hidden flex items-center gap-1"></p>
+                </div>
+
+                <!-- Согласие -->
+                <label class="flex items-start gap-2.5 mb-6 cursor-pointer">
+                    <input type="checkbox" id="agreeTerms" class="custom-checkbox mt-0.5">
+                    <span class="text-sm text-warm-600 leading-snug">
+                        Я согласен с
+                        <a href="#" class="text-accent hover:text-accent-hover">условиями использования</a>
+                        и
+                        <a href="#" class="text-accent hover:text-accent-hover">политикой конфиденциальности</a>
+                    </span>
+                </label>
+
+                <button type="submit"
+                    class="w-full py-3.5 bg-accent text-white rounded-xl font-medium btn-accent flex items-center justify-center gap-2">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    Создать аккаунт
+                </button>
+
+                <div class="divider-or my-5">или</div>
+
+                <p class="text-center text-sm text-warm-500">
+                    Уже есть аккаунт?
+                    <a href="#" id="switchToLogin" class="text-accent font-medium hover:text-accent-hover transition-colors">Войти</a>
+                </p>
             </form>
 
-            <button id="closeModalButton" class="absolute top-2 right-2">X</button>
+            <!-- Сообщение -->
+            <div id="modalMessage" class="mt-5 text-center text-sm hidden rounded-xl px-4 py-3 flex items-center justify-center gap-2"></div>
+
         </div>
     </div>
 
+    <!-- ========== СКРИПТ ========== -->
     <script>
-        const openModalButton = document.getElementById('openModalButton');
-        const closeModalButton = document.getElementById('closeModalButton');
-        const modal = document.getElementById('modal');
-        const loginForm = document.getElementById('loginForm');
-        const codeForm = document.getElementById('codeForm');
+        // Инициализация Lucide иконок
+        lucide.createIcons();
 
-        openModalButton.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-        });
+        document.addEventListener("DOMContentLoaded", function () {
+            const openModalButton = document.getElementById('openModalButton');
+            const logoutButton = document.getElementById('logoutButton');
+            const closeModal = document.getElementById('closeModal');
+            const modal = document.getElementById('modal');
 
-        closeModalButton.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const switchToRegister = document.getElementById('switchToRegister');
+            const switchToLogin = document.getElementById('switchToLogin');
+            const modalMessage = document.getElementById('modalMessage');
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('phone').value;
+            // ===========================================
+            // МАСКА ТЕЛЕФОНА  (999) 123-45-67
+            // ===========================================
+            function formatPhone(value) {
+                const digits = value.replace(/\D/g, '');
+                let formatted = '';
+                if (digits.length > 0) formatted += '(' + digits.substring(0, 3);
+                if (digits.length >= 3) formatted += ') ';
+                if (digits.length > 3) formatted += digits.substring(3, 6);
+                if (digits.length > 6) formatted += '-' + digits.substring(6, 8);
+                if (digits.length > 8) formatted += '-' + digits.substring(8, 10);
+                return formatted;
+            }
 
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ phone })
+            function getFullPhone(input) {
+                const digits = input.value.replace(/\D/g, '');
+                return '+7' + digits;
+            }
+
+            document.querySelectorAll('input[type="tel"]').forEach(input => {
+                input.addEventListener('input', function (e) {
+                    const cursorPos = this.selectionStart;
+                    const oldLength = this.value.length;
+                    const digits = this.value.replace(/\D/g, '').substring(0, 10);
+                    this.value = formatPhone(digits);
+                    // Умное позиционирование курсора
+                    const newLength = this.value.length;
+                    const diff = newLength - oldLength;
+                    this.setSelectionRange(cursorPos + diff, cursorPos + diff);
+                });
+
+                input.addEventListener('keydown', function (e) {
+                    // Разрешаем: Backspace, Delete, Tab, Escape, Enter, стрелки
+                    if ([8, 46, 9, 27, 13, 37, 38, 39, 40].includes(e.keyCode)) return;
+                    // Разрешаем: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88].includes(e.keyCode)) return;
+                    // Блокируем не-цифры
+                    if (e.key.length === 1 && !/\d/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                    // Макс 10 цифр
+                    const digits = this.value.replace(/\D/g, '');
+                    if (digits.length >= 10 && e.key.length === 1 && /\d/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Вставка
+                input.addEventListener('paste', function (e) {
+                    e.preventDefault();
+                    let pasted = (e.clipboardData || window.clipboardData).getData('text');
+                    // Убираем +7 или 8 в начале
+                    pasted = pasted.replace(/^\+?[78]/, '');
+                    const digits = pasted.replace(/\D/g, '').substring(0, 10);
+                    this.value = formatPhone(digits);
+                });
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                alert(data.message);
+            // ===========================================
+            // ГЛАЗИК — ПОКАЗАТЬ / СКРЫТЬ ПАРОЛЬ
+            // ===========================================
+            document.querySelectorAll('.password-toggle').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const input = document.getElementById(targetId);
+                    const icon = this.querySelector('[data-lucide]');
+
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        // Меняем иконку на eye-off
+                        icon.setAttribute('data-lucide', 'eye-off');
+                    } else {
+                        input.type = 'password';
+                        icon.setAttribute('data-lucide', 'eye');
+                    }
+                    // Перерисовываем иконку
+                    lucide.createIcons();
+                    input.focus();
+                });
+            });
+
+            // ===========================================
+            // СИЛА ПАРОЛЯ
+            // ===========================================
+            const regPassword = document.getElementById('regPassword');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            function checkStrength(password) {
+                let score = 0;
+                if (password.length >= 6) score++;
+                if (password.length >= 10) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[0-9]/.test(password)) score++;
+                if (/[^A-Za-z0-9]/.test(password)) score++;
+                return score;
+            }
+
+            regPassword.addEventListener('input', function () {
+                const val = this.value;
+                if (!val) {
+                    strengthFill.style.width = '0%';
+                    strengthFill.style.background = '#DDD4C8';
+                    strengthText.innerHTML = '<i data-lucide="info" class="w-3 h-3"></i><span>Введите пароль</span>';
+                    strengthText.className = 'text-xs text-warm-400 mt-1.5 flex items-center gap-1';
+                    lucide.createIcons();
+                    return;
+                }
+
+                const score = checkStrength(val);
+                const levels = [
+                    { width: '15%', color: '#EF4444', text: 'Очень слабый', icon: 'alert-circle', cls: 'text-red-500' },
+                    { width: '35%', color: '#F97316', text: 'Слабый', icon: 'alert-triangle', cls: 'text-orange-500' },
+                    { width: '55%', color: '#EAB308', text: 'Средний', icon: 'minus', cls: 'text-yellow-600' },
+                    { width: '75%', color: '#22C55E', text: 'Хороший', icon: 'check', cls: 'text-green-500' },
+                    { width: '100%', color: '#16A34A', text: 'Отличный', icon: 'check-circle', cls: 'text-green-600' },
+                ];
+                const level = levels[Math.min(score, levels.length - 1)];
+                strengthFill.style.width = level.width;
+                strengthFill.style.background = level.color;
+                strengthText.innerHTML = `<i data-lucide="${level.icon}" class="w-3 h-3"></i><span>${level.text}</span>`;
+                strengthText.className = `text-xs ${level.cls} mt-1.5 flex items-center gap-1`;
+                lucide.createIcons();
+
+                // Проверка совпадения если второе поле заполнено
+                checkMatch();
+            });
+
+            // ===========================================
+            // СОВПАДЕНИЕ ПАРОЛЕЙ
+            // ===========================================
+            const regPasswordConfirm = document.getElementById('regPasswordConfirm');
+            const matchStatus = document.getElementById('matchStatus');
+
+            function checkMatch() {
+                const p1 = regPassword.value;
+                const p2 = regPasswordConfirm.value;
+                if (!p2) {
+                    matchStatus.classList.add('hidden');
+                    return;
+                }
+                matchStatus.classList.remove('hidden');
+                if (p1 === p2) {
+                    matchStatus.innerHTML = '<i data-lucide="check-circle" class="w-3 h-3"></i><span>Пароли совпадают</span>';
+                    matchStatus.className = 'text-xs text-green-600 mt-1.5 flex items-center gap-1';
+                } else {
+                    matchStatus.innerHTML = '<i data-lucide="x-circle" class="w-3 h-3"></i><span>Пароли не совпадают</span>';
+                    matchStatus.className = 'text-xs text-red-500 mt-1.5 flex items-center gap-1';
+                }
+                lucide.createIcons();
+            }
+
+            regPasswordConfirm.addEventListener('input', checkMatch);
+
+            // ===========================================
+            // СООБЩЕНИЯ
+            // ===========================================
+            function showMessage(text, isError = true) {
+                modalMessage.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-200',
+                    'bg-red-50', 'text-red-700', 'border-red-200');
+                if (isError) {
+                    modalMessage.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+                    modalMessage.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i><span>${text}</span>`;
+                } else {
+                    modalMessage.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+                    modalMessage.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 flex-shrink-0"></i><span>${text}</span>`;
+                }
+                modalMessage.classList.add('message-slide');
+                lucide.createIcons();
+            }
+
+            function hideMessage() {
+                modalMessage.classList.add('hidden');
+                modalMessage.classList.remove('message-slide');
+                modalMessage.innerHTML = '';
+            }
+
+            // ===========================================
+            // ПЕРЕКЛЮЧЕНИЕ ТАБОВ
+            // ===========================================
+            function showLoginTab() {
+                hideMessage();
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.classList.add('bg-white', 'text-warm-900', 'shadow-sm');
+                tabLogin.classList.remove('text-warm-500');
+                tabRegister.classList.remove('bg-white', 'text-warm-900', 'shadow-sm');
+                tabRegister.classList.add('text-warm-500');
+            }
+
+            function showRegisterTab() {
+                hideMessage();
+                registerForm.classList.remove('hidden');
                 loginForm.classList.add('hidden');
-                codeForm.classList.remove('hidden');
-            } else {
-                alert('Ошибка при отправке SMS!');
+                tabRegister.classList.add('bg-white', 'text-warm-900', 'shadow-sm');
+                tabRegister.classList.remove('text-warm-500');
+                tabLogin.classList.remove('bg-white', 'text-warm-900', 'shadow-sm');
+                tabLogin.classList.add('text-warm-500');
             }
-        });
 
-        codeForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const code = document.getElementById('code').value;
-            const phone = document.getElementById('phone').value;
+            tabLogin.addEventListener('click', showLoginTab);
+            tabRegister.addEventListener('click', showRegisterTab);
+            switchToRegister.addEventListener('click', (e) => { e.preventDefault(); showRegisterTab(); });
+            switchToLogin.addEventListener('click', (e) => { e.preventDefault(); showLoginTab(); });
 
-            const response = await fetch('/verify-code', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code, phone })
+            // ===========================================
+            // МОДАЛКА
+            // ===========================================
+            if (openModalButton) {
+                openModalButton.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                    showLoginTab();
+                    setTimeout(() => lucide.createIcons(), 50);
+                });
+            }
+
+            closeModal.addEventListener('click', () => { modal.classList.add('hidden'); hideMessage(); });
+            modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.add('hidden'); hideMessage(); } });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) { modal.classList.add('hidden'); hideMessage(); }
             });
 
-            if (response.ok) {
-                alert('Код подтвержден!');
-                modal.classList.add('hidden');
-            } else {
-                alert('Неверный код!');
+            // ===========================================
+            // ВЫХОД
+            // ===========================================
+            if (logoutButton) {
+                logoutButton.addEventListener('click', async () => {
+                    try {
+                        const response = await fetch('/logout', { method: 'GET', credentials: 'include' });
+                        if (response.ok) window.location.reload();
+                    } catch (error) { console.error('Ошибка выхода:', error); }
+                });
             }
+
+            // ===========================================
+            // ВХОД
+            // ===========================================
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideMessage();
+
+                const phoneRaw = document.getElementById('loginPhone').value.trim();
+                const phone = '+7' + phoneRaw.replace(/\D/g, '');
+                const password = document.getElementById('loginPassword').value;
+
+                if (phoneRaw.replace(/\D/g, '').length < 10 || !password) {
+                    showMessage('Пожалуйста, заполните все поля корректно');
+                    return;
+                }
+
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                const originalHTML = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Входим...';
+                submitBtn.classList.add('opacity-70');
+                lucide.createIcons();
+
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ phone, password })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage(data.message || 'Добро пожаловать!', false);
+                        submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Успешно!';
+                        lucide.createIcons();
+                        setTimeout(() => { modal.classList.add('hidden'); window.location.reload(); }, 1000);
+                    } else {
+                        showMessage(data.detail || 'Неверный номер или пароль');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHTML;
+                        submitBtn.classList.remove('opacity-70');
+                        lucide.createIcons();
+                    }
+                } catch (error) {
+                    showMessage('Ошибка соединения с сервером');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                    submitBtn.classList.remove('opacity-70');
+                    lucide.createIcons();
+                    console.error(error);
+                }
+            });
+
+            // ===========================================
+            // РЕГИСТРАЦИЯ
+            // ===========================================
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideMessage();
+
+                const name = document.getElementById('regName').value.trim();
+                const phoneRaw = document.getElementById('regPhone').value.trim();
+                const phone = '+7' + phoneRaw.replace(/\D/g, '');
+                const email = document.getElementById('regEmail').value.trim();
+                const password = document.getElementById('regPassword').value;
+                const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+                const agreeTerms = document.getElementById('agreeTerms').checked;
+
+                if (!name || phoneRaw.replace(/\D/g, '').length < 10 || !email || !password || !passwordConfirm) {
+                    showMessage('Пожалуйста, заполните все поля корректно');
+                    return;
+                }
+                if (password !== passwordConfirm) {
+                    showMessage('Пароли не совпадают');
+                    return;
+                }
+                if (password.length < 6) {
+                    showMessage('Пароль должен быть не менее 6 символов');
+                    return;
+                }
+                if (!agreeTerms) {
+                    showMessage('Необходимо согласиться с условиями');
+                    return;
+                }
+
+                const submitBtn = registerForm.querySelector('button[type="submit"]');
+                const originalHTML = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Создаём аккаунт...';
+                submitBtn.classList.add('opacity-70');
+                lucide.createIcons();
+
+                try {
+                    const response = await fetch('/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ name, phone, email, password })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage(data.message || 'Аккаунт создан! Теперь войдите.', false);
+                        submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Готово!';
+                        lucide.createIcons();
+                        const savedPhone = phoneRaw;
+                        registerForm.reset();
+                        // Сбрасываем индикатор силы
+                        strengthFill.style.width = '0%';
+                        strengthText.innerHTML = '<i data-lucide="info" class="w-3 h-3"></i><span>Введите пароль</span>';
+                        strengthText.className = 'text-xs text-warm-400 mt-1.5 flex items-center gap-1';
+                        matchStatus.classList.add('hidden');
+
+                        setTimeout(() => {
+                            showLoginTab();
+                            document.getElementById('loginPhone').value = savedPhone;
+                            document.getElementById('loginPassword').focus();
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalHTML;
+                            submitBtn.classList.remove('opacity-70');
+                            lucide.createIcons();
+                        }, 1500);
+                    } else {
+                        showMessage(data.detail || 'Ошибка при регистрации');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHTML;
+                        submitBtn.classList.remove('opacity-70');
+                        lucide.createIcons();
+                    }
+                } catch (error) {
+                    showMessage('Ошибка соединения с сервером');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                    submitBtn.classList.remove('opacity-70');
+                    lucide.createIcons();
+                    console.error(error);
+                }
+            });
         });
     </script>
 
 </body>
+
 </html>
