@@ -125,16 +125,6 @@ async def create_db_and_tables():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
             
-            await cursor.execute("""
-            CREATE TABLE IF NOT EXISTS sessions (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                token VARCHAR(255) NOT NULL UNIQUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """)
-
     finally:
         conn.close()
 
@@ -143,36 +133,5 @@ async def get_session() -> AsyncGenerator[aiomysql.Connection, None]:
     conn = await get_db_connection()
     try:
         yield conn
-    finally:
-        conn.close()
-        
-        
-def generate_session_token():
-    return secrets.token_hex(16)
-
-async def create_session_for_user(user_id: int) -> str:
-    session_token = generate_session_token()
-    
-    conn = await get_db_connection()
-    try:
-        async with conn.cursor() as cursor:
-            await cursor.execute("""
-                INSERT INTO sessions (user_id, token) VALUES (%s, %s);
-            """, (user_id, session_token))
-            return session_token
-    finally:
-        conn.close()
-
-async def get_user_from_session(session_token: str):
-    conn = await get_db_connection()
-    try:
-        async with conn.cursor() as cursor:
-            await cursor.execute("""
-                SELECT * FROM sessions WHERE token = %s;
-            """, (session_token,))
-            user = await cursor.fetchone()
-            if user:
-                return user
-            return None
     finally:
         conn.close()
