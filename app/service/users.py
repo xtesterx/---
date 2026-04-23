@@ -29,7 +29,7 @@ async def login_user(phone: str, password: str) -> dict:
     if stored_password_hash != password_hash:
         raise HTTPException(status_code=400,  detail="Неверный пароль")
 
-    session_token = await create_session_for_user(user[0])
+    session_token = await create_session_for_user(user)
 
     return {
         "message": "Авторизация прошла успешно",

@@ -26,14 +26,13 @@ async def register(request: RegisterRequest):
 @router.post("/login")
 async def login(request: LoginRequest):
     data = await login_user(request.phone, request.password)
-    
-    session_token = create_access_token(data={"sub": request.phone})
+
+    session_token = data["session_token"]
 
     response = JSONResponse(content={
-        "message": "Авторизация прошла успешно",
-        "session_token": session_token
+        "message": "Авторизация прошла успешно"
     })
-    
+
     response.set_cookie(
         key="session_token",
         value=session_token,
@@ -41,14 +40,12 @@ async def login(request: LoginRequest):
         secure=False,
         samesite="lax"
     )
+
     return response
 
 @router.get("/me")
 async def get_user(session_token: str = Cookie(None)):
-    user_data = verify_access_token(session_token)
-    if not user_data:
-        raise HTTPException(status_code=401, detail="Не авторизован")
-    return {"message": "Пользователь авторизован", "user": user_data}
+    print("SESSION:", session_token)
 
 @router.get("/logout")
 async def logout(session_token: str = Cookie(None)):

@@ -27,10 +27,12 @@ async def get_user_by_phone(phone: str):
     finally:
         conn.close()
 
-async def create_session_for_user(user_id: int) -> str:
-    user_data = {"sub": user_id}
-    access_token = create_access_token(data=user_data)
-    return access_token
+async def create_session_for_user(user_id: int, name: str) -> str:
+    user_data = {
+        "sub": user_id,
+        "name": name
+    }
+    return create_access_token(user_data)
 
 async def get_user_from_session(session_token: str):
     user_data = verify_access_token(session_token)
